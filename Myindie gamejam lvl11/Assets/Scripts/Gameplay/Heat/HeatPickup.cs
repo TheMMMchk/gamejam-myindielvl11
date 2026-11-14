@@ -21,6 +21,7 @@ namespace Game.Gameplay.Heat
             }
 
             _collected = true;
+            Debug.Log($"[FIRE DEBUG] Подобран источник тепла: +{_heatAmount:0.#}.", this);
             playerHeat.RestoreHeat(_heatAmount);
             Destroy(gameObject);
         }

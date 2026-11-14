@@ -16,6 +16,7 @@ namespace Game.Gameplay.Heat
         private float _remainingBurnTime;
         private bool _hasIgnited;
         private bool _isBurning;
+        private bool _hasReportedHeatTransfer;
 
         public bool IsIgnited => _hasIgnited;
         public bool IsBurning => _isBurning;
@@ -32,6 +33,7 @@ namespace Game.Gameplay.Heat
             {
                 _remainingBurnTime = 0f;
                 _isBurning = false;
+                Debug.Log("[FIRE DEBUG] Источник догорел и больше не восстанавливает огонь.", this);
             }
         }
 
@@ -52,6 +54,12 @@ namespace Game.Gameplay.Heat
                 return;
             }
 
+            if (!_hasReportedHeatTransfer)
+            {
+                _hasReportedHeatTransfer = true;
+                Debug.Log($"[FIRE DEBUG] Игрок получает тепло от источника: +{_heatPerSecond:0.#}/сек.", this);
+            }
+
             playerHeat.RestoreHeat(_heatPerSecond * Time.deltaTime);
         }
 
@@ -65,6 +73,7 @@ namespace Game.Gameplay.Heat
             _hasIgnited = true;
             _isBurning = true;
             _remainingBurnTime = _burnDuration;
+            Debug.Log($"[FIRE DEBUG] Источник загорелся! Время горения: {_burnDuration:0.#} сек.", this);
         }
     }
 }

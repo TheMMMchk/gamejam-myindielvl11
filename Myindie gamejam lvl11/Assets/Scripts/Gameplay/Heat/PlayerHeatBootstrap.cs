@@ -15,7 +15,11 @@ namespace Game.Gameplay.Heat
         [SerializeField, Min(0f)] private float _drainPerSecond = 5f;
         [SerializeField, Range(0f, 1f)] private float _fadingThreshold = 0.25f;
 
+        [Header("Debug (Editor Console)")]
+        [SerializeField] private bool _enableDebugLogs = true;
+
         private HeatModel _heatModel;
+        private bool _wasFading;
 
         public float CurrentHeat => _heatModel != null ? _heatModel.CurrentHeat : _initialHeat;
         public float MaxHeat => _heatModel != null ? _heatModel.MaxHeat : _maxHeat;
@@ -36,11 +40,22 @@ namespace Game.Gameplay.Heat
 
             _heatModel.HeatChanged += HandleHeatChanged;
             _heatModel.HeatDepleted += HandleHeatDepleted;
+            _wasFading = _heatModel.IsFading;
+
+            Log($"Система огня запущена: {_heatModel.CurrentHeat:0.#}/{_heatModel.MaxHeat:0.#}. " +
+                $"Расход: {_drainPerSecond:0.#}/сек. Порог затухания: {_fadingThreshold:P0}.");
         }
 
         private void Update()
         {
             _heatModel.Tick(Time.deltaTime);
+
+            if (!_wasFading && _heatModel.IsFading)
+            {
+                Log($"Огонёк затухает! Осталось {_heatModel.CurrentHeat:0.#}/{_heatModel.MaxHeat:0.#}.");
+            }
+
+            _wasFading = _heatModel.IsFading;
         }
 
         private void OnDestroy()
@@ -61,7 +76,19 @@ namespace Game.Gameplay.Heat
                 return;
             }
 
+            float before = _heatModel.CurrentHeat;
             _heatModel.Restore(amount);
+            float restored = _heatModel.CurrentHeat - before;
+
+            if (restored > 0f)
+            {
+                Log($"Огонь восстановлен на +{restored:0.#}: " +
+                    $"{_heatModel.CurrentHeat:0.#}/{_heatModel.MaxHeat:0.#}.");
+            }
+            else if (_heatModel.IsDepleted)
+            {
+                Log("Восстановление не сработало: огонёк уже погас.");
+            }
         }
 
         private void HandleHeatChanged(float currentHeat, float maxHeat)
@@ -71,7 +98,16 @@ namespace Game.Gameplay.Heat
 
         private void HandleHeatDepleted()
         {
+            Log("Огонёк полностью погас!");
             HeatDepleted?.Invoke();
+        }
+
+        private void Log(string message)
+        {
+            if (_enableDebugLogs)
+            {
+                Debug.Log($"[FIRE DEBUG] {message}", this);
+            }
         }
     }
 }
