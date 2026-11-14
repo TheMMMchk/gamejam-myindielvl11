@@ -4,6 +4,7 @@ using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using Game.Gameplay.Player.Movement;
 using UnityEngine.SceneManagement;
 
 namespace Game.EditorTools
