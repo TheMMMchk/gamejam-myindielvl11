@@ -47,7 +47,7 @@ namespace Game.EditorTools
             Transform root = levelRoot.transform;
 
             camera.orthographic = true;
-            camera.orthographicSize = 5.2f;
+            camera.orthographicSize = 3.65f;
             camera.transform.position = new Vector3(0f, 0f, -10f);
             camera.backgroundColor = new Color(0.035f, 0.045f, 0.075f);
 
