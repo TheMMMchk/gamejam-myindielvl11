@@ -96,13 +96,13 @@ public sealed class GameFlowSetupTool : EditorWindow
             rect.anchorMax = new Vector2(0.5f, 1f);
             rect.pivot = new Vector2(0.5f, 1f);
             rect.anchoredPosition = new Vector2(0, -28);
-            rect.sizeDelta = new Vector2(360, 76);
+            rect.sizeDelta = new Vector2(560, 110);
 
-            Text label = CreateText("Heat Label", hudObject.transform, "Тепло: 100/100", 26);
-            SetRect(label.rectTransform, new Vector2(0.5f, 0.78f), new Vector2(0.5f, 0.78f), Vector2.zero, new Vector2(340, 36));
+            Text label = CreateText("Heat Label", hudObject.transform, "Тепло: 100/100", 38);
+            SetRect(label.rectTransform, new Vector2(0.5f, 0.78f), new Vector2(0.5f, 0.78f), Vector2.zero, new Vector2(520, 54));
 
             GameObject sliderObject = CreateUIObject("Heat Slider", hudObject.transform);
-            SetRect(sliderObject.GetComponent<RectTransform>(), new Vector2(0.5f, 0.25f), new Vector2(0.5f, 0.25f), Vector2.zero, new Vector2(330, 18));
+            SetRect(sliderObject.GetComponent<RectTransform>(), new Vector2(0.5f, 0.25f), new Vector2(0.5f, 0.25f), Vector2.zero, new Vector2(500, 24));
             Slider slider = sliderObject.AddComponent<Slider>();
             slider.minValue = 0;
             slider.maxValue = 100;
@@ -121,6 +121,15 @@ public sealed class GameFlowSetupTool : EditorWindow
             slider.targetGraphic = fillImage;
         }
 
+        // Reapply dimensions and font sizes so rerunning the tool also fixes an existing HUD.
+        RectTransform hudRect = canvasObject.transform.Find("Heat HUD").GetComponent<RectTransform>();
+        hudRect.sizeDelta = new Vector2(560, 110);
+        Text heatLabel = canvasObject.transform.Find("Heat HUD/Heat Label").GetComponent<Text>();
+        heatLabel.fontSize = 38;
+        SetRect(heatLabel.rectTransform, new Vector2(0.5f, 0.78f), new Vector2(0.5f, 0.78f), Vector2.zero, new Vector2(520, 54));
+        RectTransform heatSliderRect = canvasObject.transform.Find("Heat HUD/Heat Slider").GetComponent<RectTransform>();
+        SetRect(heatSliderRect, new Vector2(0.5f, 0.25f), new Vector2(0.5f, 0.25f), Vector2.zero, new Vector2(500, 24));
+
         Transform panel = canvasObject.transform.Find("Result Panel");
         if (panel == null)
         {
@@ -129,19 +138,25 @@ public sealed class GameFlowSetupTool : EditorWindow
             panelImage.color = new Color(0.035f, 0.025f, 0.02f, 0.92f);
             SetStretch(panelObject.GetComponent<RectTransform>());
 
-            Text result = CreateText("Result Label", panelObject.transform, "КОСТЁР НАЙДЕН", 42);
-            SetRect(result.rectTransform, new Vector2(0.5f, 0.62f), new Vector2(0.5f, 0.62f), Vector2.zero, new Vector2(800, 90));
+            Text result = CreateText("Result Label", panelObject.transform, "КОСТЁР НАЙДЕН", 56);
+            SetRect(result.rectTransform, new Vector2(0.5f, 0.62f), new Vector2(0.5f, 0.62f), Vector2.zero, new Vector2(1000, 120));
 
             GameObject buttonObject = CreateUIObject("Restart Button", panelObject.transform);
-            SetRect(buttonObject.GetComponent<RectTransform>(), new Vector2(0.5f, 0.42f), new Vector2(0.5f, 0.42f), Vector2.zero, new Vector2(260, 64));
+            SetRect(buttonObject.GetComponent<RectTransform>(), new Vector2(0.5f, 0.42f), new Vector2(0.5f, 0.42f), Vector2.zero, new Vector2(320, 76));
             Image buttonImage = buttonObject.AddComponent<Image>();
             buttonImage.color = new Color(0.85f, 0.35f, 0.12f, 1f);
             Button button = buttonObject.AddComponent<Button>();
             button.targetGraphic = buttonImage;
-            Text buttonText = CreateText("Button Label", buttonObject.transform, "Заново", 26);
+            Text buttonText = CreateText("Button Label", buttonObject.transform, "Заново", 32);
             SetStretch(buttonText.rectTransform);
             panelObject.SetActive(false);
         }
+
+        Text resultLabel = canvasObject.transform.Find("Result Panel/Result Label").GetComponent<Text>();
+        resultLabel.fontSize = 56;
+        SetRect(resultLabel.rectTransform, new Vector2(0.5f, 0.62f), new Vector2(0.5f, 0.62f), Vector2.zero, new Vector2(1000, 120));
+        Text restartLabel = canvasObject.transform.Find("Result Panel/Restart Button/Button Label").GetComponent<Text>();
+        restartLabel.fontSize = 32;
 
         GameFlowUI ui = canvasObject.GetComponent<GameFlowUI>();
         if (ui == null)
