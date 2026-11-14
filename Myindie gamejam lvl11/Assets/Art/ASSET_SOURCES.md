@@ -9,21 +9,14 @@ This document records externally created sprites selected or considered for the 
 | Player flame / flame animation | [Animated flame / Fire sprite sheet — highwizard](https://opengameart.org/content/animated-flame-fire-sprite-sheet) | CC0 | **Accepted.** 25 frames; 1×25 strip, 5×5 sheet and separate-frame formats. Author explicitly permits commercial use without credit. |
 | Fire VFX / alternate flame animation | [Animated Fire — BenHickling](https://opengameart.org/content/animated-fire) | CC0 | **Accepted as a candidate effect.** Transparent 64×64 sprite sheets, 60 frames. Check visual consistency with the accepted player flame before importing. |
 | One-time flammable object | [Woodpile — Pixor](https://pixor.art/de/library/village/woodpile/) | CC0 | **Accepted.** Use as a one-time burnable object. 48×48 sprite sheet with 8 viewing directions; select the appropriate view for the top-down camera. |
-
-## Bonfire — replacement candidates, not approved yet
-
-The previous Pixor campfire was rejected. Do not use it.
-
-| Candidate | License | Notes |
-|---|---|---|
-| [Campfire pixel art animated — ArlanTR](https://opengameart.org/content/campfire-pixel-art-animated) | CC0 | Small animated pixel-art campfire. Check the preview and scale before choosing. |
-| [Idylwild's Chromatic Campfires](https://opengameart.org/content/idylwilds-chromatic-campfires) | CC0 | Pack contains 10 animated torches/campfires, 4-frame loops, several colors, plus unlit/burnt variants. Could be useful if its 16×16 style fits the project. |
-| [Bonfire — Pixor](https://pixor.art/library/elements/bonfire/) | CC0 | 72×72 animated bonfire, 8 directions. Listed only as an alternative to inspect; do not assume approval. |
+| Final bonfire / goal | [Idylwild's Chromatic Campfires](https://opengameart.org/content/idylwilds-chromatic-campfires) | CC0 | **Approved by the user.** Pack includes 10 animated torches/campfires in 5 colors, with and without smoke; 4-frame animations and unlit/burnt variants. Designed for 16×16 tiles, also suitable for 32×32. Choose one fitting campfire variant during import. |
 
 ## Rejected
 
 - [Campfire — Pixor](https://pixor.art/library/elements/campfire/): rejected by the user.
 - [Quick 32px Sprites — Boysano](https://opengameart.org/content/quick-32px-sprites-bucket-nest-wood-seeds-leaf-sapling): rejected as an additional wood asset by the user.
+- [Campfire pixel art animated — ArlanTR](https://opengameart.org/content/campfire-pixel-art-animated): not selected.
+- [Bonfire — Pixor](https://pixor.art/library/elements/bonfire/): not selected.
 
 ## Integration guidance
 
