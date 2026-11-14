@@ -8,8 +8,8 @@ using UnityEngine;
 namespace GameJam.Art.Editor
 {
     /// <summary>
-    /// Extracts the approved source archives into Assets/Art/Imported and applies
-    /// safe pixel-art texture settings. It deliberately does not modify scenes.
+    /// Extracts approved assets, preserves existing sprite-sheet slicing,
+    /// and creates a reusable player flame animation. Does not edit scenes.
     /// </summary>
     public static class ArtAssetImportTool
     {
@@ -17,6 +17,9 @@ namespace GameJam.Art.Editor
         private const string ImportedFolder = "Assets/Art/Imported";
         private const string FlameArchive = "firespritesheet.zip";
         private const string CampfireArchive = "idylwilds_chromatic_campfires.zip";
+        private const string AnimationFolder = "Assets/Art/Animations";
+        private const string PlayerFlameClip = AnimationFolder + "/PlayerFlame.anim";
+        private const float PlayerFlameFramesPerSecond = 12f;
 
         [MenuItem("Tools/Art/Import Approved Art Assets")]
         public static void ImportApprovedAssets()
@@ -48,14 +51,26 @@ namespace GameJam.Art.Editor
             ConfigureImportedTextures();
             AssetDatabase.SaveAssets();
 
-            Debug.Log($"[Art Import] Complete. New PNG files extracted/copied: {extracted}. " +
-                      "Texture import settings were applied. Review the Imported folders and slice sprite sheets in Sprite Editor before creating clips.");
+            int flameFrames = CreatePlayerFlameAnimation();
+            int campfireSprites = CountSprites(Path.Combine(ImportedFolder, "Campfires"));
+            int woodpileSprites = CountSprites(Path.Combine(ImportedFolder, "Environment"));
+
+            Debug.Log($"[Art Import] Complete. New PNG files: {extracted}. " +
+                      $"Player flame frames: {flameFrames}; campfire sprites: {campfireSprites}; woodpile directions: {woodpileSprites}. " +
+                      "No scene or gameplay objects were changed.");
+
             EditorUtility.DisplayDialog(
-                "Art assets imported",
-                $"New PNG files: {extracted}\n\n" +
-                "Pixel-art texture settings have been applied. Open Assets/Art/Imported and inspect the sprite sheets. " +
-                "No scene or gameplay objects were changed.",
+                "Art assets ready",
+                $"New PNG files: {extracted}\nPlayer flame frames: {flameFrames}\nCampfire sprites: {campfireSprites}\nWoodpile sprites: {woodpileSprites}\n\n" +
+                "PlayerFlame.anim is in Assets/Art/Animations. No scene or gameplay objects were changed.",
                 "OK");
+        }
+
+        [MenuItem("Tools/Art/Rebuild Player Flame Animation")]
+        public static void RebuildPlayerFlameAnimation()
+        {
+            int frames = CreatePlayerFlameAnimation();
+            EditorUtility.DisplayDialog("Player flame animation", $"Animation created from {frames} frames.", "OK");
         }
 
         private static int ExtractPngs(string archivePath, string destinationFolder)
@@ -80,17 +95,13 @@ namespace GameJam.Art.Editor
                             !entry.Name.EndsWith(".png", StringComparison.OrdinalIgnoreCase))
                             continue;
 
-                        // Flatten archive subfolders while retaining the original PNG filename.
                         string safeName = Path.GetFileName(entry.Name);
                         if (string.IsNullOrEmpty(safeName))
                             continue;
 
                         string destination = Path.Combine(destinationFolder, safeName);
                         if (File.Exists(destination))
-                        {
-                            Debug.Log($"[Art Import] Keeping existing file, not overwriting: {destination}");
                             continue;
-                        }
 
                         using (Stream input = entry.Open())
                         using (FileStream output = File.Create(destination))
@@ -118,7 +129,12 @@ namespace GameJam.Art.Editor
                     continue;
 
                 importer.textureType = TextureImporterType.Sprite;
-                importer.spriteImportMode = SpriteImportMode.Single;
+
+                // Preserve Multiple slicing already stored in the committed .meta files.
+                // Only switch to Single for textures that have no existing sprite-sheet data.
+                if (importer.spriteImportMode != SpriteImportMode.Multiple)
+                    importer.spriteImportMode = SpriteImportMode.Single;
+
                 importer.filterMode = FilterMode.Point;
                 importer.textureCompression = TextureImporterCompression.Uncompressed;
                 importer.alphaIsTransparency = true;
@@ -126,6 +142,76 @@ namespace GameJam.Art.Editor
                 importer.wrapMode = TextureWrapMode.Clamp;
                 importer.SaveAndReimport();
             }
+        }
+
+        private static int CreatePlayerFlameAnimation()
+        {
+            string playerFolder = Path.Combine(ImportedFolder, "Player").Replace('\\', '/');
+            string[] guids = AssetDatabase.FindAssets("fireB t:Sprite", new[] { playerFolder });
+
+            Sprite[] frames = guids
+                .Select(guid => AssetDatabase.LoadAssetAtPath<Sprite>(AssetDatabase.GUIDToAssetPath(guid)))
+                .Where(sprite => sprite != null && sprite.name.StartsWith("fireB", StringComparison.Ordinal))
+                .OrderBy(sprite => sprite.name, StringComparer.Ordinal)
+                .ToArray();
+
+            if (frames.Length != 25)
+            {
+                Debug.LogWarning($"[Art Import] Expected 25 individual fireB frames, found {frames.Length}. Animation was not changed.");
+                return frames.Length;
+            }
+
+            EnsureFolder(AnimationFolder);
+            AnimationClip clip = AssetDatabase.LoadAssetAtPath<AnimationClip>(PlayerFlameClip);
+            if (clip == null)
+            {
+                clip = new AnimationClip { frameRate = PlayerFlameFramesPerSecond };
+                AssetDatabase.CreateAsset(clip, PlayerFlameClip);
+            }
+            else
+            {
+                clip.ClearCurves();
+                clip.frameRate = PlayerFlameFramesPerSecond;
+            }
+
+            ObjectReferenceKeyframe[] keys = new ObjectReferenceKeyframe[frames.Length];
+            for (int i = 0; i < frames.Length; i++)
+            {
+                keys[i] = new ObjectReferenceKeyframe
+                {
+                    time = i / PlayerFlameFramesPerSecond,
+                    value = frames[i]
+                };
+            }
+
+            EditorCurveBinding binding = new EditorCurveBinding
+            {
+                path = string.Empty,
+                type = typeof(SpriteRenderer),
+                propertyName = "m_Sprite"
+            };
+
+            AnimationUtility.SetObjectReferenceCurve(clip, binding, keys);
+            AnimationClipSettings settings = AnimationUtility.GetAnimationClipSettings(clip);
+            settings.loopTime = true;
+            AnimationUtility.SetAnimationClipSettings(clip, settings);
+            EditorUtility.SetDirty(clip);
+            AssetDatabase.SaveAssets();
+
+            Debug.Log($"[Art Import] Created {PlayerFlameClip} ({frames.Length} frames at {PlayerFlameFramesPerSecond} FPS, looping).");
+            return frames.Length;
+        }
+
+        private static int CountSprites(string folder)
+        {
+            if (!AssetDatabase.IsValidFolder(folder))
+                return 0;
+
+            return AssetDatabase.FindAssets("t:Sprite", new[] { folder })
+                .Select(AssetDatabase.GUIDToAssetPath)
+                .SelectMany(AssetDatabase.LoadAllAssetsAtPath)
+                .OfType<Sprite>()
+                .Count();
         }
 
         private static void EnsureFolder(string assetPath)
