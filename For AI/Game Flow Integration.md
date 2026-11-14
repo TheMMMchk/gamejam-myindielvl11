@@ -15,11 +15,16 @@ Namespace: `Game.GameFlow`.
 1. Open the gameplay scene.
 2. Select **Tools > Game Flow > Setup**.
 3. Assign the final bonfire GameObject. It must already have a suitable `Collider2D`. The tool does not resize, reposition, or replace the level collider.
-4. Click **Create / Check Game Flow** and save when prompted.
-5. Ensure the final bonfire collider is configured as a trigger and that the Player has its existing `Rigidbody2D`, collider, and `PlayerHeatBootstrap`.
+4. Click **Create / Check Game Flow** and save when prompted. The tool configures the bonfire collider as a trigger and updates existing HUD text sizes when rerun.
+5. Ensure the Player has its existing `Rigidbody2D`, collider, and `PlayerHeatBootstrap`.
 6. Enter Play Mode. Heat is shown at the top; touching the final bonfire wins; heat reaching zero loses; the result overlay offers restart.
 
-The setup command is idempotent for its named Game Flow objects: running it again reuses the existing objects and components rather than duplicating them. Existing level objects are not moved or replaced.
+## Console diagnostics
+
+The final bonfire writes messages with the `[BONFIRE]` prefix:
+- On startup: confirms that the goal trigger is active, or warns if its Game Flow reference is missing.
+- When the Player enters: confirms trigger contact and reports whether the win condition was sent.
+- If there is no Player message, check that the bonfire has a `Collider2D` with **Is Trigger** enabled and that the Player collider is on the Player object or one of its children.
 
 ## Boundaries
 
