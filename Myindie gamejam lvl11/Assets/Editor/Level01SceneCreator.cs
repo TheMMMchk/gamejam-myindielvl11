@@ -204,6 +204,10 @@ namespace Game.EditorTools
             bonfire.transform.SetParent(parent);
             bonfire.transform.position = position;
 
+            CircleCollider2D goalTrigger = bonfire.AddComponent<CircleCollider2D>();
+            goalTrigger.isTrigger = true;
+            goalTrigger.radius = 0.85f;
+
             CreateLogVisual(bonfire.transform, sprite, new Vector2(-0.12f, -0.08f), new Vector2(1.0f, 0.24f), new Color(0.28f, 0.13f, 0.07f, 1f), 0.55f);
             CreateLogVisual(bonfire.transform, sprite, new Vector2(0.12f, -0.08f), new Vector2(1.0f, 0.24f), new Color(0.42f, 0.2f, 0.08f, 1f), -0.55f);
             CreateLogVisual(bonfire.transform, sprite, new Vector2(0f, 0.3f), new Vector2(0.52f, 0.82f), new Color(1f, 0.42f, 0.08f, 1f), 0f);
