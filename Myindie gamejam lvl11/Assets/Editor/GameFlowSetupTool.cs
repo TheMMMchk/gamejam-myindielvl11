@@ -84,6 +84,7 @@ public sealed class GameFlowSetupTool : EditorWindow
         {
             GameObject eventObject = new GameObject("EventSystem", typeof(EventSystem), typeof(InputSystemUIInputModule));
             Undo.RegisterCreatedObjectUndo(eventObject, "Create EventSystem");
+            eventObject.GetComponent<InputSystemUIInputModule>().AssignDefaultActions();
         }
 
         Transform hud = canvasObject.transform.Find("Heat HUD");
