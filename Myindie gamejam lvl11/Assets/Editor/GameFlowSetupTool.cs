@@ -4,6 +4,7 @@ using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.InputSystem.UI;
 using UnityEngine.UI;
 
 public sealed class GameFlowSetupTool : EditorWindow
@@ -59,6 +60,9 @@ public sealed class GameFlowSetupTool : EditorWindow
             Undo.RegisterCreatedObjectUndo(flowObject, "Create Game Flow");
         }
 
+        Undo.RecordObject(goalCollider, "Configure final bonfire trigger");
+        goalCollider.isTrigger = true;
+
         GameFlowBootstrap flow = flowObject.GetComponent<GameFlowBootstrap>();
         if (flow == null)
             flow = Undo.AddComponent<GameFlowBootstrap>(flowObject);
@@ -78,7 +82,7 @@ public sealed class GameFlowSetupTool : EditorWindow
         EventSystem eventSystem = Object.FindFirstObjectByType<EventSystem>();
         if (eventSystem == null)
         {
-            GameObject eventObject = new GameObject("EventSystem", typeof(EventSystem), typeof(StandaloneInputModule));
+            GameObject eventObject = new GameObject("EventSystem", typeof(EventSystem), typeof(InputSystemUIInputModule));
             Undo.RegisterCreatedObjectUndo(eventObject, "Create EventSystem");
         }
 
