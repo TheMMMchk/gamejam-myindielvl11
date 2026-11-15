@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Game.GameFlow;
 using Game.Gameplay.Heat;
 using UnityEditor;
@@ -10,6 +11,7 @@ using UnityEngine.UI;
 public sealed class GameFlowSetupTool : EditorWindow
 {
     private GameObject _finalBonfire;
+    [SerializeField] private List<FlammableHeatSource> _requiredSources = new List<FlammableHeatSource>();
 
     [MenuItem("Tools/Game Flow/Setup")]
     private static void Open() => GetWindow<GameFlowSetupTool>("Game Flow Setup");
@@ -18,11 +20,34 @@ public sealed class GameFlowSetupTool : EditorWindow
     {
         EditorGUILayout.LabelField("Game Flow setup", EditorStyles.boldLabel);
         EditorGUILayout.HelpBox(
-            "Выберите объект финального костра. На нём должен быть Collider2D. Инструмент добавит к нему триггер победы и создаст HUD/экран результата, не перемещая объекты уровня.",
+            "Назначьте финальный костёр и все обязательные горючие объекты уровня. Объекты размещаются вручную; инструмент только связывает системы и создаёт HUD.",
             MessageType.Info);
 
         _finalBonfire = (GameObject)EditorGUILayout.ObjectField(
             "Финальный костёр", _finalBonfire, typeof(GameObject), true);
+
+        EditorGUILayout.Space();
+        EditorGUILayout.LabelField("Обязательные горючие объекты", EditorStyles.boldLabel);
+
+        for (int i = 0; i < _requiredSources.Count; i++)
+        {
+            EditorGUILayout.BeginHorizontal();
+            _requiredSources[i] = (FlammableHeatSource)EditorGUILayout.ObjectField(
+                "Объект " + (i + 1), _requiredSources[i], typeof(FlammableHeatSource), true);
+
+            if (GUILayout.Button("−", GUILayout.Width(28)))
+            {
+                _requiredSources.RemoveAt(i);
+                GUIUtility.ExitGUI();
+            }
+
+            EditorGUILayout.EndHorizontal();
+        }
+
+        if (GUILayout.Button("Добавить обязательный объект"))
+            _requiredSources.Add(null);
+
+        EditorGUILayout.Space();
 
         using (new EditorGUI.DisabledScope(_finalBonfire == null))
         {
@@ -42,8 +67,31 @@ public sealed class GameFlowSetupTool : EditorWindow
         Collider2D goalCollider = _finalBonfire.GetComponent<Collider2D>();
         if (goalCollider == null)
         {
-            EditorUtility.DisplayDialog("Game Flow", "На финальном костре нет Collider2D. Добавьте подходящий Collider2D вручную, затем повторите запуск. Инструмент не меняет геометрию уровня.", "OK");
+            EditorUtility.DisplayDialog("Game Flow", "На финальном костре нет Collider2D. Добавьте подходящий Collider2D вручную. Инструмент не меняет геометрию уровня.", "OK");
             return;
+        }
+
+        if (_requiredSources.Count == 0)
+        {
+            EditorUtility.DisplayDialog("Game Flow", "Добавьте хотя бы один обязательный горючий объект.", "OK");
+            return;
+        }
+
+        HashSet<FlammableHeatSource> uniqueSources = new HashSet<FlammableHeatSource>();
+        for (int i = 0; i < _requiredSources.Count; i++)
+        {
+            FlammableHeatSource source = _requiredSources[i];
+            if (source == null)
+            {
+                EditorUtility.DisplayDialog("Game Flow", $"В списке обязательных объектов не заполнен элемент {i + 1}.", "OK");
+                return;
+            }
+
+            if (!uniqueSources.Add(source))
+            {
+                EditorUtility.DisplayDialog("Game Flow", $"Объект {source.name} добавлен несколько раз. Удалите повтор.", "OK");
+                return;
+            }
         }
 
         PlayerHeatBootstrap[] heatComponents = Object.FindObjectsByType<PlayerHeatBootstrap>(FindObjectsSortMode.None);
@@ -87,22 +135,26 @@ public sealed class GameFlowSetupTool : EditorWindow
             eventObject.GetComponent<InputSystemUIInputModule>().AssignDefaultActions();
         }
 
-        // Ensure every generated UI object exists, even after an earlier partial setup.
-        // This makes Setup recoverable and safe to run repeatedly.
         Transform hud = EnsureUIObject("Heat HUD", canvasObject.transform);
         RectTransform hudRect = hud.GetComponent<RectTransform>();
         hudRect.anchorMin = new Vector2(0.5f, 1f);
         hudRect.anchorMax = new Vector2(0.5f, 1f);
         hudRect.pivot = new Vector2(0.5f, 1f);
-        hudRect.anchoredPosition = new Vector2(0, -28);
-        hudRect.sizeDelta = new Vector2(560, 110);
+        hudRect.anchoredPosition = new Vector2(0, -24);
+        hudRect.sizeDelta = new Vector2(700, 190);
 
-        Text heatLabel = EnsureText("Heat Label", hud, "Тепло: 100/100", 38);
-        SetRect(heatLabel.rectTransform, new Vector2(0.5f, 0.78f), new Vector2(0.5f, 0.78f), Vector2.zero, new Vector2(520, 54));
+        Text heatLabel = EnsureText("Heat Label", hud, "Жар: 100/100", 38);
+        SetRect(heatLabel.rectTransform, new Vector2(0.5f, 0.88f), new Vector2(0.5f, 0.88f), Vector2.zero, new Vector2(660, 52));
+
+        Text progressLabel = EnsureText("Progress Label", hud, "Зажжено: 0/0", 32);
+        SetRect(progressLabel.rectTransform, new Vector2(0.5f, 0.62f), new Vector2(0.5f, 0.62f), Vector2.zero, new Vector2(660, 44));
+
+        Text statusLabel = EnsureText("Status Label", hud, "Зажгите все обязательные объекты.", 24);
+        SetRect(statusLabel.rectTransform, new Vector2(0.5f, 0.36f), new Vector2(0.5f, 0.36f), Vector2.zero, new Vector2(660, 38));
 
         Transform sliderTransform = EnsureUIObject("Heat Slider", hud);
         RectTransform heatSliderRect = sliderTransform.GetComponent<RectTransform>();
-        SetRect(heatSliderRect, new Vector2(0.5f, 0.25f), new Vector2(0.5f, 0.25f), Vector2.zero, new Vector2(500, 24));
+        SetRect(heatSliderRect, new Vector2(0.5f, 0.1f), new Vector2(0.5f, 0.1f), Vector2.zero, new Vector2(620, 20));
         Slider slider = EnsureComponent<Slider>(sliderTransform.gameObject);
         slider.minValue = 0;
         slider.maxValue = 100;
@@ -127,7 +179,7 @@ public sealed class GameFlowSetupTool : EditorWindow
         panelImage.color = new Color(0.035f, 0.025f, 0.02f, 0.92f);
         SetStretch(panel.GetComponent<RectTransform>());
 
-        Text resultLabel = EnsureText("Result Label", panel, "КОСТЁР НАЙДЕН", 56);
+        Text resultLabel = EnsureText("Result Label", panel, "КОСТЁР ЗАЖЖЁН", 56);
         SetRect(resultLabel.rectTransform, new Vector2(0.5f, 0.62f), new Vector2(0.5f, 0.62f), Vector2.zero, new Vector2(1000, 120));
 
         Transform restartButtonTransform = EnsureUIObject("Restart Button", panel);
@@ -147,6 +199,8 @@ public sealed class GameFlowSetupTool : EditorWindow
         SerializedObject uiSerialized = new SerializedObject(ui);
         uiSerialized.FindProperty("_heatSlider").objectReferenceValue = slider;
         uiSerialized.FindProperty("_heatLabel").objectReferenceValue = heatLabel;
+        uiSerialized.FindProperty("_progressLabel").objectReferenceValue = progressLabel;
+        uiSerialized.FindProperty("_statusLabel").objectReferenceValue = statusLabel;
         uiSerialized.FindProperty("_resultPanel").objectReferenceValue = panel.gameObject;
         uiSerialized.FindProperty("_resultLabel").objectReferenceValue = resultLabel;
         uiSerialized.FindProperty("_restartButton").objectReferenceValue = button;
@@ -155,6 +209,10 @@ public sealed class GameFlowSetupTool : EditorWindow
         SerializedObject flowSerialized = new SerializedObject(flow);
         flowSerialized.FindProperty("_playerHeat").objectReferenceValue = heatComponents[0];
         flowSerialized.FindProperty("_ui").objectReferenceValue = ui;
+        SerializedProperty requiredSourcesProperty = flowSerialized.FindProperty("_requiredSources");
+        requiredSourcesProperty.arraySize = _requiredSources.Count;
+        for (int i = 0; i < _requiredSources.Count; i++)
+            requiredSourcesProperty.GetArrayElementAtIndex(i).objectReferenceValue = _requiredSources[i];
         flowSerialized.ApplyModifiedProperties();
 
         FinalBonfireTrigger goal = _finalBonfire.GetComponent<FinalBonfireTrigger>();
@@ -172,7 +230,7 @@ public sealed class GameFlowSetupTool : EditorWindow
             return;
         }
 
-        EditorUtility.DisplayDialog("Game Flow", "Game Flow и UI настроены. Проверьте финальный костёр и запустите Play Mode.", "OK");
+        EditorUtility.DisplayDialog("Game Flow", "Game Flow настроен. Проверьте прогресс и финальный костёр в Play Mode.", "OK");
     }
 
     private static Transform EnsureUIObject(string name, Transform parent)
