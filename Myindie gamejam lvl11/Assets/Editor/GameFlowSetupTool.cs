@@ -87,87 +87,69 @@ public sealed class GameFlowSetupTool : EditorWindow
             eventObject.GetComponent<InputSystemUIInputModule>().AssignDefaultActions();
         }
 
-        Transform hud = canvasObject.transform.Find("Heat HUD");
-        if (hud == null)
-        {
-            GameObject hudObject = CreateUIObject("Heat HUD", canvasObject.transform);
-            RectTransform rect = hudObject.GetComponent<RectTransform>();
-            rect.anchorMin = new Vector2(0.5f, 1f);
-            rect.anchorMax = new Vector2(0.5f, 1f);
-            rect.pivot = new Vector2(0.5f, 1f);
-            rect.anchoredPosition = new Vector2(0, -28);
-            rect.sizeDelta = new Vector2(560, 110);
-
-            Text label = CreateText("Heat Label", hudObject.transform, "Тепло: 100/100", 38);
-            SetRect(label.rectTransform, new Vector2(0.5f, 0.78f), new Vector2(0.5f, 0.78f), Vector2.zero, new Vector2(520, 54));
-
-            GameObject sliderObject = CreateUIObject("Heat Slider", hudObject.transform);
-            SetRect(sliderObject.GetComponent<RectTransform>(), new Vector2(0.5f, 0.25f), new Vector2(0.5f, 0.25f), Vector2.zero, new Vector2(500, 24));
-            Slider slider = sliderObject.AddComponent<Slider>();
-            slider.minValue = 0;
-            slider.maxValue = 100;
-            slider.value = 100;
-            GameObject background = CreateUIObject("Background", sliderObject.transform);
-            SetStretch(background.GetComponent<RectTransform>());
-            Image bgImage = background.AddComponent<Image>();
-            bgImage.color = new Color(0.12f, 0.12f, 0.12f, 0.9f);
-            GameObject fillArea = CreateUIObject("Fill Area", sliderObject.transform);
-            SetStretch(fillArea.GetComponent<RectTransform>());
-            GameObject fill = CreateUIObject("Fill", fillArea.transform);
-            SetStretch(fill.GetComponent<RectTransform>());
-            Image fillImage = fill.AddComponent<Image>();
-            fillImage.color = new Color(1f, 0.48f, 0.12f);
-            slider.fillRect = fill.GetComponent<RectTransform>();
-            slider.targetGraphic = fillImage;
-        }
-
-        // Reapply dimensions and font sizes so rerunning the tool also fixes an existing HUD.
-        RectTransform hudRect = canvasObject.transform.Find("Heat HUD").GetComponent<RectTransform>();
+        // Ensure every generated UI object exists, even after an earlier partial setup.
+        // This makes Setup recoverable and safe to run repeatedly.
+        Transform hud = EnsureUIObject("Heat HUD", canvasObject.transform);
+        RectTransform hudRect = hud.GetComponent<RectTransform>();
+        hudRect.anchorMin = new Vector2(0.5f, 1f);
+        hudRect.anchorMax = new Vector2(0.5f, 1f);
+        hudRect.pivot = new Vector2(0.5f, 1f);
+        hudRect.anchoredPosition = new Vector2(0, -28);
         hudRect.sizeDelta = new Vector2(560, 110);
-        Text heatLabel = canvasObject.transform.Find("Heat HUD/Heat Label").GetComponent<Text>();
-        heatLabel.fontSize = 38;
+
+        Text heatLabel = EnsureText("Heat Label", hud, "Тепло: 100/100", 38);
         SetRect(heatLabel.rectTransform, new Vector2(0.5f, 0.78f), new Vector2(0.5f, 0.78f), Vector2.zero, new Vector2(520, 54));
-        RectTransform heatSliderRect = canvasObject.transform.Find("Heat HUD/Heat Slider").GetComponent<RectTransform>();
+
+        Transform sliderTransform = EnsureUIObject("Heat Slider", hud);
+        RectTransform heatSliderRect = sliderTransform.GetComponent<RectTransform>();
         SetRect(heatSliderRect, new Vector2(0.5f, 0.25f), new Vector2(0.5f, 0.25f), Vector2.zero, new Vector2(500, 24));
+        Slider slider = EnsureComponent<Slider>(sliderTransform.gameObject);
+        slider.minValue = 0;
+        slider.maxValue = 100;
+        slider.value = 100;
 
-        Transform panel = canvasObject.transform.Find("Result Panel");
-        if (panel == null)
-        {
-            GameObject panelObject = CreateUIObject("Result Panel", canvasObject.transform);
-            Image panelImage = panelObject.AddComponent<Image>();
-            panelImage.color = new Color(0.035f, 0.025f, 0.02f, 0.92f);
-            SetStretch(panelObject.GetComponent<RectTransform>());
+        Transform background = EnsureUIObject("Background", sliderTransform);
+        SetStretch(background.GetComponent<RectTransform>());
+        Image bgImage = EnsureComponent<Image>(background.gameObject);
+        bgImage.color = new Color(0.12f, 0.12f, 0.12f, 0.9f);
 
-            Text result = CreateText("Result Label", panelObject.transform, "КОСТЁР НАЙДЕН", 56);
-            SetRect(result.rectTransform, new Vector2(0.5f, 0.62f), new Vector2(0.5f, 0.62f), Vector2.zero, new Vector2(1000, 120));
+        Transform fillArea = EnsureUIObject("Fill Area", sliderTransform);
+        SetStretch(fillArea.GetComponent<RectTransform>());
+        Transform fill = EnsureUIObject("Fill", fillArea);
+        SetStretch(fill.GetComponent<RectTransform>());
+        Image fillImage = EnsureComponent<Image>(fill.gameObject);
+        fillImage.color = new Color(1f, 0.48f, 0.12f);
+        slider.fillRect = fill.GetComponent<RectTransform>();
+        slider.targetGraphic = fillImage;
 
-            GameObject buttonObject = CreateUIObject("Restart Button", panelObject.transform);
-            SetRect(buttonObject.GetComponent<RectTransform>(), new Vector2(0.5f, 0.42f), new Vector2(0.5f, 0.42f), Vector2.zero, new Vector2(320, 76));
-            Image buttonImage = buttonObject.AddComponent<Image>();
-            buttonImage.color = new Color(0.85f, 0.35f, 0.12f, 1f);
-            Button button = buttonObject.AddComponent<Button>();
-            button.targetGraphic = buttonImage;
-            Text buttonText = CreateText("Button Label", buttonObject.transform, "Заново", 32);
-            SetStretch(buttonText.rectTransform);
-            panelObject.SetActive(false);
-        }
+        Transform panel = EnsureUIObject("Result Panel", canvasObject.transform);
+        Image panelImage = EnsureComponent<Image>(panel.gameObject);
+        panelImage.color = new Color(0.035f, 0.025f, 0.02f, 0.92f);
+        SetStretch(panel.GetComponent<RectTransform>());
 
-        Text resultLabel = canvasObject.transform.Find("Result Panel/Result Label").GetComponent<Text>();
-        resultLabel.fontSize = 56;
+        Text resultLabel = EnsureText("Result Label", panel, "КОСТЁР НАЙДЕН", 56);
         SetRect(resultLabel.rectTransform, new Vector2(0.5f, 0.62f), new Vector2(0.5f, 0.62f), Vector2.zero, new Vector2(1000, 120));
-        Text restartLabel = canvasObject.transform.Find("Result Panel/Restart Button/Button Label").GetComponent<Text>();
-        restartLabel.fontSize = 32;
+
+        Transform restartButtonTransform = EnsureUIObject("Restart Button", panel);
+        SetRect(restartButtonTransform.GetComponent<RectTransform>(), new Vector2(0.5f, 0.42f), new Vector2(0.5f, 0.42f), Vector2.zero, new Vector2(320, 76));
+        Image buttonImage = EnsureComponent<Image>(restartButtonTransform.gameObject);
+        buttonImage.color = new Color(0.85f, 0.35f, 0.12f, 1f);
+        Button button = EnsureComponent<Button>(restartButtonTransform.gameObject);
+        button.targetGraphic = buttonImage;
+        Text buttonText = EnsureText("Button Label", restartButtonTransform, "Заново", 32);
+        SetStretch(buttonText.rectTransform);
+        panel.gameObject.SetActive(false);
 
         GameFlowUI ui = canvasObject.GetComponent<GameFlowUI>();
         if (ui == null)
             ui = Undo.AddComponent<GameFlowUI>(canvasObject);
 
         SerializedObject uiSerialized = new SerializedObject(ui);
-        uiSerialized.FindProperty("_heatSlider").objectReferenceValue = canvasObject.transform.Find("Heat HUD/Heat Slider").GetComponent<Slider>();
-        uiSerialized.FindProperty("_heatLabel").objectReferenceValue = canvasObject.transform.Find("Heat HUD/Heat Label").GetComponent<Text>();
-        uiSerialized.FindProperty("_resultPanel").objectReferenceValue = canvasObject.transform.Find("Result Panel").gameObject;
-        uiSerialized.FindProperty("_resultLabel").objectReferenceValue = canvasObject.transform.Find("Result Panel/Result Label").GetComponent<Text>();
-        uiSerialized.FindProperty("_restartButton").objectReferenceValue = canvasObject.transform.Find("Result Panel/Restart Button").GetComponent<Button>();
+        uiSerialized.FindProperty("_heatSlider").objectReferenceValue = slider;
+        uiSerialized.FindProperty("_heatLabel").objectReferenceValue = heatLabel;
+        uiSerialized.FindProperty("_resultPanel").objectReferenceValue = panel.gameObject;
+        uiSerialized.FindProperty("_resultLabel").objectReferenceValue = resultLabel;
+        uiSerialized.FindProperty("_restartButton").objectReferenceValue = button;
         uiSerialized.ApplyModifiedProperties();
 
         SerializedObject flowSerialized = new SerializedObject(flow);
@@ -193,18 +175,28 @@ public sealed class GameFlowSetupTool : EditorWindow
         EditorUtility.DisplayDialog("Game Flow", "Game Flow и UI настроены. Проверьте финальный костёр и запустите Play Mode.", "OK");
     }
 
-    private static GameObject CreateUIObject(string name, Transform parent)
+    private static Transform EnsureUIObject(string name, Transform parent)
     {
+        Transform existing = parent.Find(name);
+        if (existing != null)
+            return existing;
+
         GameObject go = new GameObject(name, typeof(RectTransform));
         Undo.RegisterCreatedObjectUndo(go, "Create " + name);
         go.transform.SetParent(parent, false);
-        return go;
+        return go.transform;
     }
 
-    private static Text CreateText(string name, Transform parent, string value, int size)
+    private static T EnsureComponent<T>(GameObject owner) where T : Component
     {
-        GameObject go = CreateUIObject(name, parent);
-        Text text = go.AddComponent<Text>();
+        T component = owner.GetComponent<T>();
+        return component != null ? component : Undo.AddComponent<T>(owner);
+    }
+
+    private static Text EnsureText(string name, Transform parent, string value, int size)
+    {
+        Transform textTransform = EnsureUIObject(name, parent);
+        Text text = EnsureComponent<Text>(textTransform.gameObject);
         text.text = value;
         text.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
         text.fontSize = size;
