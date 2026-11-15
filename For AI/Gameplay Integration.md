@@ -9,7 +9,7 @@ All scripts are in namespace `Game.Gameplay.Heat`:
 - `PlayerHeatBootstrap` — attach to the Player GameObject. Creates and updates the heat model.
 - `HeatModel` — plain C# gameplay logic. Owns the current heat value and depletion rules.
 - `HeatPickup` — restores heat instantly on Player contact, then destroys its GameObject.
-- `FlammableHeatSource` — ignites once on Player contact and provides heat for a limited time. Its `Ignited` event is raised exactly once on first ignition so Game Flow can count mandatory level objectives.
+- `FlammableHeatSource` — ignites once on Player contact and provides heat for a limited time. Its `Ignited` event is raised exactly once on first ignition so Game Flow can count mandatory level objectives. Optional `Unlit Visual` / `Lit Visual` references or a `SpriteRenderer` tint provide persistent visual feedback; the lit state does not reset when the temporary heat window ends.
 
 The existing movement scripts and Player Rigidbody2D/collider are not modified.
 
