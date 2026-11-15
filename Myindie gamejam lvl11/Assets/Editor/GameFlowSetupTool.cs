@@ -64,6 +64,12 @@ public sealed class GameFlowSetupTool : EditorWindow
             return;
         }
 
+        if (_finalBonfire.scene != EditorSceneManager.GetActiveScene())
+        {
+            EditorUtility.DisplayDialog("Game Flow", "Финальный костёр должен находиться в открытой игровой сцене, а не быть prefab asset или объектом другой сцены.", "OK");
+            return;
+        }
+
         Collider2D goalCollider = _finalBonfire.GetComponent<Collider2D>();
         if (goalCollider == null)
         {
@@ -84,6 +90,12 @@ public sealed class GameFlowSetupTool : EditorWindow
             if (source == null)
             {
                 EditorUtility.DisplayDialog("Game Flow", $"В списке обязательных объектов не заполнен элемент {i + 1}.", "OK");
+                return;
+            }
+
+            if (source.gameObject.scene != EditorSceneManager.GetActiveScene())
+            {
+                EditorUtility.DisplayDialog("Game Flow", $"Объект {source.name} должен находиться в открытой игровой сцене.", "OK");
                 return;
             }
 
