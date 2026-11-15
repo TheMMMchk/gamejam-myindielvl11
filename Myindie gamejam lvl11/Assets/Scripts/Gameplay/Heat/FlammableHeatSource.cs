@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 namespace Game.Gameplay.Heat
@@ -20,6 +21,9 @@ namespace Game.Gameplay.Heat
 
         public bool IsIgnited => _hasIgnited;
         public bool IsBurning => _isBurning;
+
+        /// <summary>Raised exactly once when this source is ignited for the first time.</summary>
+        public event Action<FlammableHeatSource> Ignited;
 
         private void Update()
         {
@@ -74,6 +78,7 @@ namespace Game.Gameplay.Heat
             _isBurning = true;
             _remainingBurnTime = _burnDuration;
             Debug.Log($"[FIRE DEBUG] Источник загорелся! Время горения: {_burnDuration:0.#} сек.", this);
+            Ignited?.Invoke(this);
         }
     }
 }
