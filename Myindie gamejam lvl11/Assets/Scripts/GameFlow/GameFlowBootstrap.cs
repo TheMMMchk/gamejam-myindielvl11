@@ -54,6 +54,9 @@ namespace Game.GameFlow
             UpdateProgressUI();
             _ui.ShowResult(false, false);
 
+            if (IsGoalUnlocked)
+                _ui.ShowAllSourcesIgnited();
+
             if (RequiredCount == 0)
             {
                 Debug.LogError("[Game Flow] Не назначены обязательные горючие объекты. Добавьте их в Tools > Game Flow > Setup.", this);
