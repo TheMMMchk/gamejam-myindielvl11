@@ -198,7 +198,7 @@ public sealed class GameFlowSetupTool : EditorWindow
         Transform textTransform = EnsureUIObject(name, parent);
         Text text = EnsureComponent<Text>(textTransform.gameObject);
         text.text = value;
-        text.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
+        text.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
         text.fontSize = size;
         text.alignment = TextAnchor.MiddleCenter;
         text.color = Color.white;
