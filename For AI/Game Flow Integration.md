@@ -36,6 +36,10 @@ Namespace: `Game.GameFlow`.
 
 The tool does not place, resize or reposition level objects. The level author chooses the mandatory objects and their layout.
 
+## Mandatory source visuals
+
+Each `FlammableHeatSource` can use optional `Unlit Visual` and `Lit Visual` child objects. Assign both to switch the appearance on first ignition. If neither is assigned, the source's `SpriteRenderer` is tinted using the unlit and lit colors. The lit state remains for the attempt even after heat restoration expires.
+
 ## Final bonfire visuals
 
 The bonfire can use optional `Locked Visual` and `Ready Visual` child objects on `FinalBonfireTrigger`. Assign both to switch between separate extinguished/ready visuals. If neither is assigned, the script tints the bonfire's `SpriteRenderer` using the locked and ready colors. The visual references are optional; collision and objective logic do not depend on them.
