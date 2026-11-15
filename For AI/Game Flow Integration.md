@@ -1,0 +1,31 @@
+# Game Flow Integration
+
+## Runtime contract
+
+Namespace: `Game.GameFlow`.
+
+- `GameFlowBootstrap` owns the run state: `Playing`, `Won`, or `Lost`.
+- It subscribes to the existing `PlayerHeatBootstrap.HeatChanged` and `HeatDepleted` events. Gameplay is not modified.
+- Heat depletion transitions to `Lost`; `FinalBonfireTrigger` transitions to `Won`.
+- Only the first transition from `Playing` is accepted. Finishing pauses gameplay with `Time.timeScale = 0`; restart restores time scale and reloads the active scene.
+- `GameFlowUI` presents the heat value, result message, and restart button.
+
+## Unity setup
+
+1. Open the gameplay scene.
+2. Select **Tools > Game Flow > Setup**.
+3. Assign the final bonfire GameObject. It must already have a suitable `Collider2D`. The tool does not resize, reposition, or replace the level collider.
+4. Click **Create / Check Game Flow** and save when prompted. The tool configures the bonfire collider as a trigger and updates existing HUD text sizes when rerun.
+5. Ensure the Player has its existing `Rigidbody2D`, collider, and `PlayerHeatBootstrap`.
+6. Enter Play Mode. Heat is shown at the top; touching the final bonfire wins; heat reaching zero loses; the result overlay offers restart.
+
+## Console diagnostics
+
+The final bonfire writes messages with the `[BONFIRE]` prefix:
+- On startup: confirms that the goal trigger is active, or warns if its Game Flow reference is missing.
+- When the Player enters: confirms trigger contact and reports whether the win condition was sent.
+- If there is no Player message, check that the bonfire has a `Collider2D` with **Is Trigger** enabled and that the Player collider is on the Player object or one of its children.
+
+## Boundaries
+
+Game Flow does not change heat rules, player movement, art, VFX, or level layout. It uses only the public Gameplay heat API. The final goal is explicitly assigned in the Editor tool rather than discovered through global scene searches at runtime.
